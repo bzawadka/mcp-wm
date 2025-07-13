@@ -1,0 +1,16 @@
+[project]
+name = "mcp-wm"
+version = "0.1.0"
+description = "practical MCP example simulating real-world financial services in wealth management"
+authors = [
+    { name = "Bartlomiej Zawadka", email = "your.email@example.com" }   
+]
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "asyncio>=3.4.3",
+    "mcp>=1.11.0",
+    "typing-extensions>=4.14.1",
+]
+[project.scripts]
+wealth-server = "wealth_management_server:main"

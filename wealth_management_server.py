@@ -26,15 +26,16 @@ from mcp.types import (
     EmbeddedResource,
     LoggingLevel
 )
+from pydantic import AnyUrl
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger("wealth-management-mcp")
+logger = logging.getLogger("wealth-management-mcp-server")
 
 
 class WealthManagementServer:
     def __init__(self):
-        self.server = Server("wealth-management-mcp")
+        self.server = Server("wealth-management-mcp-server")
         self.clients_data = self._generate_sample_clients()
         
         # Register tools
@@ -90,7 +91,7 @@ class WealthManagementServer:
         async def handle_list_tools() -> list[Tool]:
             return [
                 Tool(
-                    name="get_client_list",
+                    name="get_clients",
                     description="Retrieve list of all clients managed by the advisor. Returns comprehensive client information including IDs, names, risk profiles, and AUM.",
                     inputSchema={
                         "type": "object",
@@ -119,13 +120,16 @@ class WealthManagementServer:
         
         @self.server.call_tool()
         async def handle_call_tool(name: str, arguments: dict) -> list[TextContent]:
-            if name == "get_client_list":
-                return await self._get_client_list(arguments)
+            if name == "get_clients":
+                return await self._get_clients(arguments)
             else:
                 raise ValueError(f"Unknown tool: {name}")
-    
-    async def _get_client_list(self, arguments: dict) -> list[TextContent]:
-        """Handle get_client_list tool calls"""
+
+
+    async def _get_clients(self, arguments: dict) -> list[TextContent]:
+        logger.info("Serving clients request with arguments: %s", arguments)
+
+        """Handle get_clients tool calls"""
         try:
             filter_by = arguments.get("filter_by", "all")
             sort_by = arguments.get("sort_by", "name")
@@ -156,7 +160,7 @@ class WealthManagementServer:
             )]
             
         except Exception as e:
-            logger.error(f"Error in get_client_list: {str(e)}")
+            logger.error(f"Error in get_clients: {str(e)}")
             return [TextContent(
                 type="text",
                 text=json.dumps({
@@ -164,7 +168,8 @@ class WealthManagementServer:
                     "message": f"Error retrieving client list: {str(e)}"
                 })
             )]
-    
+
+
     def _filter_clients(self, filter_by: str) -> List[Dict[str, Any]]:
         """Filter clients based on criteria"""
         if filter_by == "all":
@@ -189,7 +194,8 @@ class WealthManagementServer:
                     filtered.append(client)
         
         return filtered
-    
+
+
     def _sort_clients(self, clients: List[Dict[str, Any]], sort_by: str) -> List[Dict[str, Any]]:
         """Sort clients based on criteria"""
         if sort_by == "name":
@@ -204,7 +210,8 @@ class WealthManagementServer:
             return sorted(clients, key=lambda x: x["last_review"], reverse=True)
         else:
             return clients
-    
+
+
     def _setup_handlers(self):
         """Set up additional MCP handlers"""
         
@@ -213,9 +220,10 @@ class WealthManagementServer:
             return []
         
         @self.server.read_resource()
-        async def handle_read_resource(uri: str) -> str:
+        async def handle_read_resource(uri: 'AnyUrl') -> str:
             raise ValueError(f"Resource not found: {uri}")
-    
+
+
     async def run(self):
         """Run the MCP server"""
         logger.info("Starting Wealth Management MCP Server - Phase 1")
@@ -226,7 +234,7 @@ class WealthManagementServer:
                 read_stream,
                 write_stream,
                 InitializationOptions(
-                    server_name="wealth-management-mcp",
+                    server_name="wealth-management-mcp-server",
                     server_version="1.0.0",
                     capabilities=self.server.get_capabilities(
                         notification_options=NotificationOptions(),
@@ -234,6 +242,7 @@ class WealthManagementServer:
                     ),
                 ),
             )
+
 
 async def main():
     """Main entry point"""

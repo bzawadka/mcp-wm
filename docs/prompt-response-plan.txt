@@ -1,0 +1,48 @@
+This is an excellent practical example for learning MCP! It perfectly simulates a real-world financial services scenario and will give you hands-on experience with multiple interconnected MCP tools. Your proposed example absolutely makes sense and will create a working solution that can answer all those client advisor questions.
+Why This Example is Great for Learning MCP
+
+Real-world relevance: Simulates actual wealth management workflows
+Tool interdependency: Tools build on each other (clients → positions → recommendations)
+Complex queries: Enables sophisticated analysis across multiple data dimensions
+Practical testing: Easy to validate with realistic scenarios
+
+Phased Development Approach
+Phase 1: Foundation + Tool 1 (Client List)
+
+Set up MCP server structure
+Implement client list tool with sample data
+Test basic client queries
+
+Phase 2: Tool 2 (Client Positions)
+
+Add position data structure
+Implement position retrieval by client
+Test position-based queries
+
+Phase 3: Tool 3 (Recommendations)
+
+Add recommendation system
+Implement ISIN-based recommendations
+Test recommendation queries
+
+Phase 4: Integration & Advanced Queries
+
+Optimize cross-tool functionality
+Test complex multi-dimensional queries
+Add error handling and validation
+
+Data Structure Preview
+Your example will support queries like:
+
+"Which clients have SELL rated positions?" → Cross-reference Tools 2 & 3
+"Which clients hold >50% cash?" → Analyze Tool 2 data
+"Which clients hold Apple?" → Search Tool 2 positions
+"Which clients have no stocks?" → Filter Tool 2 by position types
+
+Next Steps
+Let's start with Phase 1. I'll help you build the MCP server foundation and implement Tool 1 (client list). This will give you:
+
+Proper MCP server structure
+Sample client data (BZ-xxxxxxx format)
+Basic tool registration and handling
+Testing framework

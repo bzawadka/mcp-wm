@@ -1,0 +1,14 @@
+Basic queries:
+
+"Show me all my clients"
+"Get client list sorted by AUM"
+"Show me only active clients"
+"Who are my high AUM clients?"
+"Who is my client BZ-00001?"
+"Which clients have the highest assets under management?"
+
+Filtered queries:
+
+"Show me new clients from the last 90 days"
+"List clients under review"
+"Show me top 5 clients by AUM"

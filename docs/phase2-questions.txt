@@ -1,0 +1,18 @@
+Basic position queries:
+
+"Show me positions for client BZ-00001"
+"What does Maria Sklodowska-Curie hold in her portfolio?"
+"Show me all equity positions for BZ-00003"
+
+Analysis queries:
+
+"Which clients hold Apple stock?"
+"Show me clients with more than 50% cash allocation"
+"Which clients have bond positions?"
+"Show me clients with no equity positions"
+
+Advanced filtering:
+
+"Show me only positions above 10% weight for BZ-00001"
+"Get bond positions for Lech Wałęsa"
+"Show me cash positions for all clients"

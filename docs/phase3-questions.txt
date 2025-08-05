@@ -1,0 +1,3 @@
+Does my client BZ-00002 Lech Wałęsa has any SELL rated positions?
+Which securities are currently SELL rated?
+Which clients have SELL-rated positions?

@@ -6,6 +6,7 @@ Client Advisory Tools for Wealth Management
 This server provides tools for client advisors to manage and query client information.
 Phase 1: Tool 1 - Client List Management
 Phase 2: Tool 2 - Client Position Management
+Phase 3: Tool 3 - Recommendations Tool
 """
 
 import asyncio
@@ -35,6 +36,55 @@ logger = logging.getLogger("wealth-management-mcp-server")
 
 
 class WealthManagementServer:
+    # Recommendations database - simulates research team recommendations
+    RECOMMENDATIONS_DATABASE = {
+        # Technology stocks - mixed recommendations
+        "US0378331005": {"rating": "BUY", "target_price": 250.00, "analyst": "Tech Research Team", "last_updated": "2025-07-18", "rationale": "Strong iPhone sales and AI integration"},
+        "US5949181045": {"rating": "BUY", "target_price": 480.00, "analyst": "Tech Research Team", "last_updated": "2025-07-17", "rationale": "Azure growth and AI leadership"},
+        "US02079K3059": {"rating": "NEUTRAL", "target_price": 180.00, "analyst": "Tech Research Team", "last_updated": "2025-07-16", "rationale": "Search market maturity offset by AI opportunities"},
+        "US0231351067": {"rating": "BUY", "target_price": 200.00, "analyst": "Consumer Research Team", "last_updated": "2025-07-15", "rationale": "AWS growth and retail optimization"},
+        "US88160R1014": {"rating": "SELL", "target_price": 180.00, "analyst": "Auto Research Team", "last_updated": "2025-07-19", "rationale": "EV market competition intensifying"},
+        "US17275R1023": {"rating": "NEUTRAL", "target_price": 55.00, "analyst": "Tech Research Team", "last_updated": "2025-07-14", "rationale": "Steady networking demand but limited growth"},
+        "US4592001014": {"rating": "SELL", "target_price": 35.00, "analyst": "Semiconductor Team", "last_updated": "2025-07-18", "rationale": "Losing market share to AMD and ARM"},
+        "US6174464486": {"rating": "BUY", "target_price": 120.00, "analyst": "Financial Services Team", "last_updated": "2025-07-17", "rationale": "Strong wealth management division"},
+        "US30303M1027": {"rating": "NEUTRAL", "target_price": 550.00, "analyst": "Tech Research Team", "last_updated": "2025-07-16", "rationale": "Metaverse investments vs. core business strength"},
+        "US67066G1040": {"rating": "BUY", "target_price": 1200.00, "analyst": "AI Research Team", "last_updated": "2025-07-19", "rationale": "AI chip demand continues to surge"},
+        
+        # Bonds - generally neutral/conservative recommendations
+        "US912828Z490": {"rating": "BUY", "target_price": 102.50, "analyst": "Fixed Income Team", "last_updated": "2025-07-18", "rationale": "Safe haven amid market volatility"},
+        "US9128283H60": {"rating": "NEUTRAL", "target_price": 98.75, "analyst": "Fixed Income Team", "last_updated": "2025-07-17", "rationale": "Duration risk vs. yield attractiveness"},
+        "US037833100": {"rating": "BUY", "target_price": 104.25, "analyst": "Credit Research Team", "last_updated": "2025-07-16", "rationale": "Strong corporate fundamentals"},
+        "US594918104": {"rating": "BUY", "target_price": 103.80, "analyst": "Credit Research Team", "last_updated": "2025-07-15", "rationale": "Excellent credit quality and yield"},
+        "US02079K305": {"rating": "NEUTRAL", "target_price": 101.20, "analyst": "Credit Research Team", "last_updated": "2025-07-14", "rationale": "Fair value at current levels"},
+        "US464287200": {"rating": "BUY", "target_price": 105.10, "analyst": "Financial Services Team", "last_updated": "2025-07-13", "rationale": "Bank strength supports credit"},
+        "US254687FX05": {"rating": "SELL", "target_price": 96.50, "analyst": "Media Research Team", "last_updated": "2025-07-18", "rationale": "Streaming competition pressures"},
+        "US717081103": {"rating": "NEUTRAL", "target_price": 102.00, "analyst": "Healthcare Team", "last_updated": "2025-07-17", "rationale": "Stable pharma fundamentals"}
+    }
+
+    SECURITIES_DATABASE = {
+        # Equities
+        "US0378331005": {"name": "Apple Inc.", "type": "equity", "sector": "Technology", "currency": "USD"},
+        "US5949181045": {"name": "Microsoft Corp.", "type": "equity", "sector": "Technology", "currency": "USD"},
+        "US02079K3059": {"name": "Alphabet Inc.", "type": "equity", "sector": "Technology", "currency": "USD"},
+        "US0231351067": {"name": "Amazon.com Inc.", "type": "equity", "sector": "Consumer Discretionary", "currency": "USD"},
+        "US88160R1014": {"name": "Tesla Inc.", "type": "equity", "sector": "Consumer Discretionary", "currency": "USD"},
+        "US17275R1023": {"name": "Cisco Systems Inc.", "type": "equity", "sector": "Technology", "currency": "USD"},
+        "US4592001014": {"name": "Intel Corp.", "type": "equity", "sector": "Technology", "currency": "USD"},
+        "US6174464486": {"name": "Morgan Stanley", "type": "equity", "sector": "Financial Services", "currency": "USD"},
+        "US30303M1027": {"name": "Meta Platforms Inc.", "type": "equity", "sector": "Technology", "currency": "USD"},
+        "US67066G1040": {"name": "NVIDIA Corp.", "type": "equity", "sector": "Technology", "currency": "USD"},
+        
+        # Bonds
+        "US912828Z490": {"name": "US Treasury 10Y", "type": "bond", "maturity": "2034-05-15", "currency": "USD"},
+        "US9128283H60": {"name": "US Treasury 30Y", "type": "bond", "maturity": "2054-02-15", "currency": "USD"},
+        "US037833100": {"name": "Apple Inc. Corporate Bond", "type": "bond", "maturity": "2032-02-23", "currency": "USD"},
+        "US594918104": {"name": "Microsoft Corporate Bond", "type": "bond", "maturity": "2031-06-01", "currency": "USD"},
+        "US02079K305": {"name": "Alphabet Corporate Bond", "type": "bond", "maturity": "2030-08-15", "currency": "USD"},
+        "US464287200": {"name": "JPMorgan Chase Bond", "type": "bond", "maturity": "2029-04-23", "currency": "USD"},
+        "US254687FX05": {"name": "Disney Corporate Bond", "type": "bond", "maturity": "2028-12-01", "currency": "USD"},
+        "US717081103": {"name": "Pfizer Corporate Bond", "type": "bond", "maturity": "2033-03-15", "currency": "USD"}
+    }
+
     def __init__(self):
         self.server = Server("wealth-management-mcp-server")
         self.clients_data = self._generate_sample_clients()
@@ -45,7 +95,8 @@ class WealthManagementServer:
         
         # Set up request handlers
         self._setup_handlers()
-    
+
+
     def _generate_sample_clients(self) -> List[Dict[str, Any]]:
         """Generate sample client data for testing"""
         clients = []
@@ -269,8 +320,32 @@ class WealthManagementServer:
                         },
                         "required": ["client_id"]
                     }
+                ),
+                Tool(
+                    name="get_recommendations", 
+                    description="Get investment recommendations (BUY/SELL/NEUTRAL) for specific ISINs or all available securities. Provides analyst ratings, target prices, and rationale.",
+                    inputSchema={
+                        "type": "object", 
+                        "properties": {
+                            "isins": {
+                                "type": "array",
+                                "items": {"type": "string"},
+                                "description": "List of ISINs to get recommendations for. If empty, returns all available recommendations."
+                            },
+                            "rating_filter": {
+                                "type": "string",
+                                "enum": ["BUY", "SELL", "NEUTRAL", "all"],
+                                "description": "Filter recommendations by rating (optional)"
+                            },
+                            "asset_type": {
+                                "type": "string", 
+                                "enum": ["equity", "bond", "all"],
+                                "description": "Filter by asset type (optional)"
+                            }
+                        },
+                        "required": []
+                    }
                 )
-
             ]
         
         @self.server.call_tool()
@@ -279,6 +354,8 @@ class WealthManagementServer:
                 return await self._get_clients(arguments)
             elif name == "get_client_positions":
                 return await self._get_client_positions(arguments)
+            elif name == "get_recommendations":
+                return await self._get_recommendations(arguments)
             else:
                 raise ValueError(f"Unknown tool: {name}")
 
@@ -403,6 +480,88 @@ class WealthManagementServer:
                 text=json.dumps({
                     "status": "error",
                     "message": f"Error retrieving client positions: {str(e)}"
+                })
+            )]
+
+
+
+    async def _get_recommendations(self, arguments: dict) -> list[TextContent]:
+        logger.info("Serving recommendations request with arguments: %s", arguments)
+
+        """Handle get_recommendations tool calls"""
+        try:
+            isins = arguments.get("isins", []) if arguments else []
+            rating_filter = arguments.get("rating_filter", "all") if arguments else "all" 
+            asset_type = arguments.get("asset_type", "all") if arguments else "all"
+            
+            recommendations = []
+            
+            # If no specific ISINs requested, get all available recommendations
+            if not isins:
+                isins = list(self.RECOMMENDATIONS_DATABASE.keys())
+            
+            for isin in isins:
+                if isin not in self.RECOMMENDATIONS_DATABASE:
+                    continue
+                    
+                recommendation = self.RECOMMENDATIONS_DATABASE[isin].copy()
+                security_info = self.SECURITIES_DATABASE.get(isin, {})
+                
+                # Apply asset type filter
+                if asset_type != "all" and security_info.get("type") != asset_type:
+                    continue
+                    
+                # Apply rating filter  
+                if rating_filter != "all" and recommendation["rating"] != rating_filter:
+                    continue
+                    
+                # Enhance with security information
+                recommendation["isin"] = isin
+                recommendation["security_name"] = security_info.get("name", "Unknown")
+                recommendation["security_type"] = security_info.get("type", "unknown")
+                recommendation["sector"] = security_info.get("sector", "N/A")
+                
+                recommendations.append(recommendation)
+            
+            # Sort by rating priority (BUY > NEUTRAL > SELL) then by last_updated
+            rating_priority = {"BUY": 3, "NEUTRAL": 2, "SELL": 1}
+            recommendations.sort(key=lambda x: (rating_priority.get(x["rating"], 0), x["last_updated"]), reverse=True)
+            
+            # Calculate summary statistics
+            rating_counts = {"BUY": 0, "SELL": 0, "NEUTRAL": 0}
+            for rec in recommendations:
+                rating_counts[rec["rating"]] += 1
+                
+            response = {
+                "recommendations": recommendations,
+                "summary": {
+                    "total_recommendations": len(recommendations), 
+                    "rating_breakdown": rating_counts,
+                    "filters_applied": {
+                        "specific_isins": len(arguments.get("isins", [])) > 0 if arguments else False,
+                        "rating_filter": rating_filter,
+                        "asset_type": asset_type
+                    }
+                },
+                "metadata": {
+                    "timestamp": "2025-07-19T10:30:00Z",
+                    "research_teams": ["Tech Research Team", "Fixed Income Team", "Credit Research Team", 
+                                    "Auto Research Team", "Financial Services Team", "AI Research Team",
+                                    "Consumer Research Team", "Semiconductor Team", "Media Research Team", 
+                                    "Healthcare Team"]
+                }
+            }
+            
+            return [TextContent(type="text", text=json.dumps(response, indent=2))]
+
+                        
+        except Exception as e:
+            logger.error(f"Error in get_recommendations: {str(e)}")
+            return [TextContent(
+                type="text",
+                text=json.dumps({
+                    "status": "error",
+                    "message": f"Error retrieving recommendations: {str(e)}"
                 })
             )]
 
